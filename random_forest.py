@@ -7,37 +7,40 @@ import seaborn as sns
 
 
 class random_forest:
-    def __init__(self, n_trees, max_depth, min_sample_split, n_features=None):
-        self.n_trees = n_trees
-        self.max_depth = max_depth
+    def __init__(self, number_trees, max_depth, min_sample_split, n_attributes=None):
+        self.number_trees = number_trees
         self.min_samples = min_sample_split
-        self.n_features = n_features
+        self.n_attributes = n_attributes
+        self.max_depth = max_depth
         self.trees = []
          
     def fit(self, x, y):
         self.trees = []
-        for _ in range(self.n_trees):
-            dec_tree = DecisionTree(max_depth=self.max_depth, min_samples_split=self.min_samples, n_features=self.n_features)
+        for _ in range(self.number_trees):
+            decision_tree = DecisionTree(max_depth=self.max_depth, min_samples_split=self.min_samples, n_attributes=self.n_attributes)
             x_sample, y_sample = self.bootstrap_samples(x, y)
-            dec_tree.fit(x_sample, y_sample)
-            self.trees.append(dec_tree)
-         
-    def bootstrap_samples(self, x, y):
-        n_samples = x.shape[0]
-        idxs = np.random.choice(n_samples, n_samples, replace=True)
-        return x[idxs], y[idxs]
-    
-    
-    def most_common_label(self, y):
-        counter = Counter(y)
-        most_common = counter.most_common(1)[0][0]
-        return most_common
+            decision_tree.fit(x_sample, y_sample)
+            self.trees.append(decision_tree)
     
     def predict(self, x):
         predictions = np.array([tree.predict(x) for tree in self.trees])
         tree_predictions = np.swapaxes(predictions, 0, 1)
         predictions = np.array([self.most_common_label(pred) for pred in tree_predictions])
         return predictions
+
+
+    def most_common_label(self, y):
+        counter = Counter(y)
+        most_common = counter.most_common(1)[0][0]
+        return most_common     
+    
+
+    def bootstrap_samples(self, x, y):
+        number_samples = x.shape[0]
+        index = np.random.choice(number_samples, number_samples, replace=True)
+        return x[index], y[index]
+    
+    
     
 
 # manual calculations of accuracy
@@ -67,7 +70,7 @@ def compute_learning_curve(X_train, y_train, X_eval, y_eval, increments=5):
         X_train_sample = X_train.iloc[indices]
         y_train_sample = y_train.iloc[indices]
 
-        forest = random_forest(n_trees=10, max_depth=10, min_sample_split=2)
+        forest = random_forest(number_trees=10, max_depth=10, min_sample_split=2)
         forest.fit(X_train_sample.values, y_train_sample.values)
 
         y_pred_eval = forest.predict(X_eval.values)
@@ -118,7 +121,7 @@ X_eval = eval_data.iloc[:, :-1]
 y_eval = eval_data.iloc[:, -1]
 
 # Fit the random forest model
-forest = random_forest(n_trees=10, max_depth=10, min_sample_split=2)
+forest = random_forest(number_trees=10, max_depth=10, min_sample_split=2)
 forest.fit(X_train.values, y_train.values)
 
 # Predict on the evaluation set
